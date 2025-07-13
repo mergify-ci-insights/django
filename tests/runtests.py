@@ -378,6 +378,8 @@ def django_tests(
     timing,
     shuffle,
     durations=None,
+    testrunner=None,
+    junit_output_dir=None,
 ):
     if parallel in {0, "auto"}:
         max_parallel = get_max_test_processes()
@@ -700,6 +702,14 @@ if __name__ == "__main__":
         metavar="N",
         help="Show the N slowest test cases (N=0 for all).",
     )
+    parser.add_argument(
+        "--testrunner",
+        help="Use a custom test runner class instead of the default DiscoverRunner.",
+    )
+    parser.add_argument(
+        "--junit-output-dir",
+        help="Directory to output JUnit XML test results.",
+    )
 
     options = parser.parse_args()
 
@@ -747,6 +757,14 @@ if __name__ == "__main__":
     else:
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "test_sqlite")
         options.settings = os.environ["DJANGO_SETTINGS_MODULE"]
+
+    # Set custom test runner before django.setup() is called
+    if options.testrunner:
+        settings.TEST_RUNNER = options.testrunner
+
+    # Set up JUnit output directory if specified
+    if options.junit_output_dir:
+        os.environ["JUNIT_OUTPUT_DIR"] = options.junit_output_dir
 
     if options.selenium:
         if multiprocessing.get_start_method() == "spawn" and options.parallel != 1:
@@ -805,6 +823,8 @@ if __name__ == "__main__":
                 options.timing,
                 options.shuffle,
                 getattr(options, "durations", None),
+                options.testrunner,
+                options.junit_output_dir,
             )
         time_keeper.print_results()
         if failures:
