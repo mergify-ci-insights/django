@@ -54,7 +54,7 @@ jobs:
         with:
           token: ${{ secrets.MERGIFY_TOKEN }}
           job_name: Windows, SQLite, Python ${{ matrix.python-version }}
-          report_path: tests/test-results/*.xml
+          report_path: tests/test-results/TEST-model_fields.*.xml
 
   javascript-tests:
     runs-on: ubuntu-latest
