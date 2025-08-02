@@ -34,7 +34,22 @@ jobs:
         run: python -m pip install --upgrade pip setuptools wheel
       - run: python -m pip install -r tests/requirements/py3.txt -e .
       - name: Run tests
-        run: python -Wall tests/runtests.py -v2
+        run: python -Wall tests/runtests.py -v2 --testrunner=junit_runner.JUnitXMLTestRunner --junit-output-dir=test-results
+        env:
+          JUNIT_OUTPUT_DIR: test-results
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-schedule-windows-${{ matrix.python-version }}
+          path: tests/test-results/
+      - name: Upload to Mergify CI Insights
+        if: always()
+        uses: mergifyio/gha-mergify-ci@v8
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          job_name: Schedule Windows, SQLite, Python ${{ matrix.python-version }}
+          report_path: tests/test-results/*.xml
 
   pyc-only:
     runs-on: ubuntu-latest
@@ -60,7 +75,22 @@ jobs:
           find $DJANGO_PACKAGE_ROOT -name '*.py' -print -delete
       - run: python -m pip install -r tests/requirements/py3.txt
       - name: Run tests
-        run: python -Wall tests/runtests.py --verbosity=2
+        run: python -Wall tests/runtests.py --verbosity=2 --testrunner=junit_runner.JUnitXMLTestRunner --junit-output-dir=test-results
+        env:
+          JUNIT_OUTPUT_DIR: test-results
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-schedule-pyc-only
+          path: tests/test-results/
+      - name: Upload to Mergify CI Insights
+        if: always()
+        uses: mergifyio/gha-mergify-ci@v8
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          job_name: Schedule Byte-compiled Django
+          report_path: tests/test-results/*.xml
 
   javascript-tests:
     runs-on: ubuntu-latest
@@ -97,7 +127,22 @@ jobs:
       - name: Run Selenium tests
         working-directory: ./tests/
         run: |
-          python -Wall runtests.py --verbosity 2 --noinput --selenium=chrome --headless --settings=test_sqlite --parallel 2
+          python -Wall runtests.py --verbosity 2 --noinput --selenium=chrome --headless --settings=test_sqlite --parallel 2 --testrunner=junit_runner.JUnitXMLTestRunner --junit-output-dir=test-results
+        env:
+          JUNIT_OUTPUT_DIR: test-results
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-schedule-selenium-sqlite
+          path: tests/test-results/
+      - name: Upload to Mergify CI Insights
+        if: always()
+        uses: mergifyio/gha-mergify-ci@v8
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          job_name: Schedule Selenium SQLite
+          report_path: tests/test-results/*.xml
 
   selenium-postgresql:
     runs-on: ubuntu-latest
@@ -135,7 +180,22 @@ jobs:
       - name: Run Selenium tests
         working-directory: ./tests/
         run: |
-          python -Wall runtests.py --verbosity 2 --noinput --selenium=chrome --headless --settings=test_postgres --parallel 2
+          python -Wall runtests.py --verbosity 2 --noinput --selenium=chrome --headless --settings=test_postgres --parallel 2 --testrunner=junit_runner.JUnitXMLTestRunner --junit-output-dir=test-results
+        env:
+          JUNIT_OUTPUT_DIR: test-results
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-schedule-selenium-postgresql
+          path: tests/test-results/
+      - name: Upload to Mergify CI Insights
+        if: always()
+        uses: mergifyio/gha-mergify-ci@v8
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          job_name: Schedule Selenium PostgreSQL
+          report_path: tests/test-results/*.xml
 
   postgresql:
     strategy:
@@ -179,4 +239,19 @@ jobs:
         run: mv ./.github/workflows/data/test_postgres.py.tpl ./tests/test_postgres.py
       - name: Run tests
         working-directory: ./tests/
-        run: python -Wall runtests.py --settings=test_postgres --verbosity=2
+        run: python -Wall runtests.py --settings=test_postgres --verbosity=2 --testrunner=junit_runner.JUnitXMLTestRunner --junit-output-dir=test-results
+        env:
+          JUNIT_OUTPUT_DIR: test-results
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-schedule-postgresql-${{ matrix.version }}-${{ matrix.server_side_bindings }}
+          path: tests/test-results/
+      - name: Upload to Mergify CI Insights
+        if: always()
+        uses: mergifyio/gha-mergify-ci@v8
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          job_name: Schedule PostgreSQL ${{ matrix.version }} SSB-${{ matrix.server_side_bindings }}
+          report_path: tests/test-results/*.xml

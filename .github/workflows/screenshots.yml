@@ -33,7 +33,22 @@ jobs:
 
       - name: Run Selenium tests with screenshots
         working-directory: ./tests/
-        run: python -Wall runtests.py --verbosity=2 --noinput --selenium=chrome --headless --screenshots --settings=test_sqlite --parallel=2
+        run: python -Wall runtests.py --verbosity=2 --noinput --selenium=chrome --headless --screenshots --settings=test_sqlite --parallel=2 --testrunner=junit_runner.JUnitXMLTestRunner --junit-output-dir=test-results
+        env:
+          JUNIT_OUTPUT_DIR: test-results
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-screenshots
+          path: tests/test-results/
+      - name: Upload to Mergify CI Insights
+        if: always()
+        uses: mergifyio/gha-mergify-ci@v8
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          job_name: Screenshots
+          report_path: tests/test-results/*.xml
 
       - name: Cache oxipng
         uses: actions/cache@v4
